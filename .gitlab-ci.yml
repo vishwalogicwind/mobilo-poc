@@ -1,0 +1,49 @@
+image: node:lts
+
+stages:
+  - dev
+  - staging
+  - release
+
+dev:
+  stage: dev
+  script:
+    - export REACT_APP_SERVER_URL=https://server-dev.path.pro/graphql
+    - export REACT_APP_SERVER_REST_URL=https://server-dev.path.pro
+    - export REACT_APP_SENTRY_DSN=https://88efed0284cd4cb9b5fe40871f70bf54@sentry.cpptl.co/30
+    - export CI=false
+    - npm install
+    - npm run build
+    - npm install -g firebase-tools@7.13.0
+    - firebase deploy -P dev --token $FIREBASE_TOKEN
+  only:
+    - dev
+
+staging:
+  stage: staging
+  script:
+    - export REACT_APP_SERVER_URL=
+    - export REACT_APP_SERVER_REST_URL=
+    - export REACT_APP_SENTRY_DSN=https://88efed0284cd4cb9b5fe40871f70bf54@sentry.cpptl.co/30
+    - export CI=false
+    - npm install
+    - npm run build
+    - npm install -g firebase-tools@7.13.0
+    - firebase deploy --token $FIREBASE_TOKEN
+  only:
+    - staging
+
+release:
+  stage: release
+  script:
+    - export REACT_APP_SERVER_URL=
+    - export REACT_APP_SERVER_REST_URL=
+    - export REACT_APP_SENTRY_DSN=https://88efed0284cd4cb9b5fe40871f70bf54@sentry.cpptl.co/30
+    - export REACT_APP_NODE_ENV=production
+    - export CI=false
+    - npm install
+    - npm run build
+    - npm install -g firebase-tools@7.13.0
+    - firebase deploy --token $FIREBASE_TOKEN
+  only:
+    - master
