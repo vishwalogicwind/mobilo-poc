@@ -197,3 +197,21 @@ export const getBase64 = (file) => {
     reader.onerror = (error) => reject(error);
   });
 };
+export function getCookie(cname) {
+  // eslint-disable-next-line no-console
+  const name = `${cname}=`;
+  // eslint-disable-next-line no-undef
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(';');
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return '';
+}

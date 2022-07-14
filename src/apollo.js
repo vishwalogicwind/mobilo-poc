@@ -108,7 +108,8 @@ const errorLink = onError((options) => {
         });
       }
     }, 200);
-
+    // eslint-disable-next-line no-console
+    console.log('fromt apollo 1');
     history.replace('/logout');
     return;
   }
@@ -155,6 +156,8 @@ const errorLink = onError((options) => {
           extensions.code === 405 ||
           extensions.exception.name === 'JsonWebTokenError')
       ) {
+        // eslint-disable-next-line no-console
+        console.log('From apollo 2');
         history.replace('/logout');
       }
 

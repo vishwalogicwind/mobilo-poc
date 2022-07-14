@@ -17,7 +17,8 @@ export const MODULES = {
 };
 
 /* Authentication */
-export const TOKEN = 'TOKEN';
+export const TOKEN = 'accessToken';
+export const REFRESH_TOKEN = 'refreshToken';
 export const USER = 'USER';
 
 export const ROLES = {

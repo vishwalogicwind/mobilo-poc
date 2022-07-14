@@ -1,7 +1,11 @@
 import React, { createContext, useReducer } from 'react';
+import Cookies from 'universal-cookie';
 import client from './apollo';
 import api from './common/api';
-import { TOKEN, USER } from './common/constants';
+import { REFRESH_TOKEN, TOKEN, USER } from './common/constants';
+import { getCookie } from './common/utils';
+
+const cookies = new Cookies();
 
 const getLoggedInUser = () => {
   // eslint-disable-next-line no-undef
@@ -14,7 +18,9 @@ const getLoggedInUser = () => {
 const initialState = {
   currentUser: getLoggedInUser() || {},
   // eslint-disable-next-line no-undef
-  authToken: localStorage.getItem(TOKEN)
+  // authToken: localStorage.getItem(TOKEN)
+  authToken: getCookie(TOKEN),
+  authRefreshToken: getCookie(REFRESH_TOKEN)
 };
 
 const reducer = (state, action) => {
@@ -32,11 +38,24 @@ const reducer = (state, action) => {
     case 'SET_CURRENT_ROLE':
       return { ...state, currentRole: action.data };
     case 'LOGOUT':
+      // eslint-disable-next-line no-console
+      console.log('dispatch logout');
       delete api.defaults.headers.common.Authorization;
       // eslint-disable-next-line no-undef
       localStorage.removeItem(USER);
       // eslint-disable-next-line no-undef
       localStorage.removeItem(TOKEN);
+      cookies.remove(TOKEN, {
+        path: '/',
+        secure: true,
+        domain: '.mobilocard.com'
+      });
+
+      cookies.remove(REFRESH_TOKEN, {
+        path: '/',
+        secure: true,
+        domain: '.mobilocard.com'
+      });
       client.clearStore();
       return {
         ...initialState,
@@ -50,8 +69,22 @@ const reducer = (state, action) => {
       return { ...state, authenticated: action.data };
     case 'SET_TOKEN':
       // eslint-disable-next-line no-undef
+      cookies.set(TOKEN, action.data, {
+        path: '/',
+        secure: true,
+        domain: '.mobilocard.com'
+      });
+      // eslint-disable-next-line no-undef
       localStorage.setItem(TOKEN, action.data);
       return { ...state, authToken: action.data };
+    case 'SET_REFRESH_TOKEN':
+      cookies.set(REFRESH_TOKEN, action.data, {
+        path: '/',
+        secure: true,
+        domain: '.mobilocard.com'
+      });
+
+      return { ...state, authRefreshToken: action.data };
     case 'SET_INITIAL_SHOW_ALL_FIELDS_STATUS':
       return { ...state, initialShowAllFieldStatus: action.data };
     default:
@@ -69,9 +102,14 @@ function AppContextProvider({ children }) {
 
   const getToken = () => {
     // eslint-disable-next-line no-undef
-    return localStorage.getItem(TOKEN) || null;
+    return getCookie(TOKEN);
+    // return localStorage.getItem(TOKEN) || null;
   };
-
+  const getRefreshToken = () => {
+    return getCookie(REFRESH_TOKEN);
+    // eslint-disable-next-line no-undef
+    // return localStorage.getItem(REFRESH_TOKEN) || null;
+  };
   const getCurrentUser = () => {
     // eslint-disable-next-line no-undef
     return localStorage.getItem(USER)
@@ -89,12 +127,15 @@ function AppContextProvider({ children }) {
     return state.authenticated;
   };
 
-  const initializeAuth = (authToken, userData) => {
+  const initializeAuth = (authToken, authRefreshToken, userData) => {
     const token = authToken || getToken();
     const user = userData || getCurrentUser();
+    const refreshToken = authRefreshToken || getRefreshToken();
+
     if (token) {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       dispatch({ type: 'SET_TOKEN', data: token });
+      dispatch({ type: 'SET_REFRESH_TOKEN', data: refreshToken });
       dispatch({ type: 'SET_AUTHENTICATED', data: true });
       dispatch({ type: 'SET_CURRENT_USER', data: user });
       if (user && user.roles && user.roles[0]) {
